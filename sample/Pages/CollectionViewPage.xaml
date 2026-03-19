@@ -1,0 +1,67 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:cm="clr-namespace:Plugin.Maui.ContextMenu;assembly=Plugin.Maui.ContextMenu"
+    xmlns:viewmodels="clr-namespace:Plugin.Maui.ContextMenu.Sample.ViewModels"
+    x:Class="Plugin.Maui.ContextMenu.Sample.Pages.CollectionViewPage"
+    x:Name="this"
+    x:DataType="viewmodels:CollectionViewPageViewModel"
+    Title="Use with a CollectionView">
+    <Grid RowDefinitions="Auto, *" RowSpacing="16"
+        Padding="0, 32">
+        <VerticalStackLayout Spacing="8">
+            <Label Margin="32, 0"
+                Text="Use the CollectionView provided by Plugin.Maui.ContextMenu. iOS needs this to have its underlying view handle the context menu event" />
+            <Label Margin="32, 0"
+                Text="Add a ContextMenu.Menu to the CollectionView and each item will get its context menu" />
+            <Label Margin="32, 0"
+                Text="The BindingContext of the Menu will be the same as the one in ItemTemplate, so you can have dynamic menus based on the Item's data" />
+            <Label Margin="32, 0" Text="Here, the text of the cell is used as the menu's title" />
+        </VerticalStackLayout>
+        <CollectionView ItemsSource="{Binding Items}" Grid.Row="1"
+            cm:ContextMenu.ClickCommand="{Binding NotifyCommand}" SelectionMode="Single">
+            <cm:ContextMenu.Menu>
+                <DataTemplate>
+                    <cm:Menu Title="{Binding Text}">
+                        <cm:Action Title="{Binding Text}" />
+                        <cm:Action Title="Upload documents" Icon="dotnet_bot.png"
+                            Command="{Binding BindingContext.TestCommand, Source={x:Reference this}}"
+                            CommandParameter="{Binding}" />
+                        <cm:Group Title="{Binding Text}">
+                            <cm:Action Title="Start" Icon="dotnet_bot.png"
+                                Command="{Binding BindingContext.TestCommand, Source={x:Reference this}}"
+                                CommandParameter="{Binding}" />
+                            <cm:Action Title="Stop" Icon="dotnet_bot.png" IsEnabled="False"
+                                IsDestructive="True"
+                                Command="{Binding BindingContext.TestCommand, Source={x:Reference this}}"
+                                CommandParameter="{Binding}" />
+                        </cm:Group>
+                        <cm:Menu Title="Clipboard">
+                            <cm:Action Title="Copy"
+                                Command="{Binding BindingContext.TestCommand, Source={x:Reference this}}"
+                                CommandParameter="{Binding}"
+                                Icon="dotnet_bot.png" />
+                            <cm:Action Title="Paste"
+                                Command="{Binding BindingContext.TestCommand, Source={x:Reference this}}"
+                                CommandParameter="{Binding}"
+                                Icon="dotnet_bot.png" />
+                        </cm:Menu>
+                    </cm:Menu>
+                </DataTemplate>
+            </cm:ContextMenu.Menu>
+            <CollectionView.ItemsLayout>
+                <GridItemsLayout Orientation="Vertical" Span="3" />
+
+            </CollectionView.ItemsLayout>
+            <CollectionView.ItemTemplate>
+                <DataTemplate>
+                    <ContentView Background="{Binding Color}"
+                        HeightRequest="{Binding CellHeight, Source={x:Reference this}}">
+                        <Label Text="{Binding Text}" Grid.Column="1" VerticalOptions="Center"
+                            HorizontalOptions="Center" TextColor="Black" />
+                    </ContentView>
+                </DataTemplate>
+            </CollectionView.ItemTemplate>
+        </CollectionView>
+    </Grid>
+</ContentPage>
