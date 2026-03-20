@@ -1,7 +1,4 @@
-﻿
-[assembly: XmlnsDefinition("https://schemas.the49.com/dotnet/2023/maui", "Plugin.Maui.ContextMenu")]
-
-namespace Plugin.Maui.ContextMenu;
+﻿namespace Plugin.Maui.ContextMenu;
 
 public static class MauiAppBuilderExtensions
 {

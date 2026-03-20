@@ -98,6 +98,21 @@ public partial class ContextMenu
             visualElement.SetValue(InteractionProperty, null);
         }
     }
+    static partial void OnIsVisibleChanged(BindableObject bindable, bool isVisible)
+    {
+        if (bindable is VisualElement ve && ve.Handler?.PlatformView is UIButton button)
+        {
+            if (isVisible)
+            {
+                AttachControlMenu(button, ve);
+            }
+            else
+            {
+                button.Menu = null;
+            }
+        }
+    }
+
     static void AttachControlMenu(UIButton button, VisualElement visualElement)
     {
         var menuTemplate = GetMenu(visualElement);
@@ -272,6 +287,11 @@ public class ContextMenuInteractionDelegate : UIKit.UIContextMenuInteractionDele
     {
         if (interaction.View is MauiView view)
         {
+            if (!ContextMenu.GetIsVisible((VisualElement)view.View))
+            {
+                return null;
+            }
+
             var menuTemplate = ContextMenu.GetMenu((VisualElement)view.View);
 
             var content = menuTemplate.CreateContent();

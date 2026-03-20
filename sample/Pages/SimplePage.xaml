@@ -8,7 +8,12 @@
     <ScrollView BindingContext="{x:Reference this}">
         <VerticalStackLayout Spacing="32" Padding="32">
             <Label Text="Add a context menu to any view:" HorizontalTextAlignment="Center" FontSize="18" />
-            <ContentView HeightRequest="200" WidthRequest="200" Background="GreenYellow">
+            <HorizontalStackLayout HorizontalOptions="Center" Spacing="8">
+                <Label Text="Context menu visible:" VerticalOptions="Center" />
+                <Switch x:Name="contextMenuToggle" IsToggled="True" VerticalOptions="Center" />
+            </HorizontalStackLayout>
+            <ContentView HeightRequest="200" WidthRequest="200" Background="GreenYellow"
+                         cm:ContextMenu.IsVisible="{Binding IsToggled, Source={x:Reference contextMenuToggle}}">
                 <cm:ContextMenu.Menu>
                     <DataTemplate>
                         <cm:Menu>

@@ -17,9 +17,11 @@
             <Label Margin="32, 0"
                 Text="The BindingContext of the Menu will be the same as the one in ItemTemplate, so you can have dynamic menus based on the Item's data" />
             <Label Margin="32, 0" Text="Here, the text of the cell is used as the menu's title" />
+            <Button Margin="32, 0" Text="Toggle Context Menu" Command="{Binding ToggleContextMenuCommand}" />
         </VerticalStackLayout>
         <CollectionView ItemsSource="{Binding Items}" Grid.Row="1"
-            cm:ContextMenu.ClickCommand="{Binding NotifyCommand}" SelectionMode="Single">
+            cm:ContextMenu.ClickCommand="{Binding NotifyCommand}" SelectionMode="Single"
+            cm:ContextMenu.IsVisible="{Binding IsContextMenuVisible}">
             <cm:ContextMenu.Menu>
                 <DataTemplate>
                     <cm:Menu Title="{Binding Text}">
@@ -50,15 +52,14 @@
                 </DataTemplate>
             </cm:ContextMenu.Menu>
             <CollectionView.ItemsLayout>
-                <GridItemsLayout Orientation="Vertical" Span="3" />
-
+                <GridItemsLayout Orientation="Vertical" Span="3" HorizontalItemSpacing="2" VerticalItemSpacing="2" />
             </CollectionView.ItemsLayout>
             <CollectionView.ItemTemplate>
                 <DataTemplate>
                     <ContentView Background="{Binding Color}"
                         HeightRequest="{Binding CellHeight, Source={x:Reference this}}">
-                        <Label Text="{Binding Text}" Grid.Column="1" VerticalOptions="Center"
-                            HorizontalOptions="Center" TextColor="Black" />
+                        <Label Text="{Binding Text}" VerticalOptions="Center"
+                            HorizontalOptions="Center" TextColor="Black" FontAttributes="Bold" />
                     </ContentView>
                 </DataTemplate>
             </CollectionView.ItemTemplate>

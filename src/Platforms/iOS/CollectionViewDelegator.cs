@@ -39,6 +39,11 @@ public class CollectionViewDelegator : ReorderableItemsViewDelegator<Reorderable
 
     public override UIContextMenuConfiguration GetContextMenuConfiguration(UICollectionView collectionView, NSIndexPath indexPath, CGPoint point)
     {
+        if (!ContextMenu.GetIsVisible(ViewController.ItemsView))
+        {
+            return null;
+        }
+
         var menuTemplate = ContextMenu.GetMenu(ViewController.ItemsView);
 
         if (menuTemplate == null)

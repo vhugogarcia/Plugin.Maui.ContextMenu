@@ -13,7 +13,7 @@
 		<Description>.NET MAUI library for Android and iOS to open a native context menu on long press.</Description>
 		<PackageIcon>Plugin.Maui.ContextMenu.Logo.png</PackageIcon>
 		<PackageTags>dotnet; maui; contextmenu; ios; android;</PackageTags>
-		<Version>1.1.2</Version>
+		<Version>1.1.3</Version>
 		<Company></Company>
 	</PropertyGroup>
 

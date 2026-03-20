@@ -42,6 +42,14 @@ public static partial class ContextMenu
            false,
            propertyChanged: ShowMenuOnClickChanged);
 
+    public static readonly BindableProperty IsVisibleProperty
+        = BindableProperty.CreateAttached(
+            "IsVisible",
+            typeof(bool),
+            typeof(VisualElement),
+            true,
+            propertyChanged: IsVisibleChanged);
+
     static void MenuChanged(BindableObject bindable, object oldValue, object newValue)
     {
         if (bindable is VisualElement visualElement)
@@ -107,10 +115,16 @@ public static partial class ContextMenu
         }
     }
 
+    static void IsVisibleChanged(BindableObject bindable, object oldValue, object newValue)
+    {
+        OnIsVisibleChanged(bindable, (bool)newValue);
+    }
+
     static partial void SetupMenu(BindableObject bindable);
     static partial void DisposeMenu(BindableObject bindable);
     static partial void SetupClickCommand(BindableObject bindable);
     static partial void DisposeClickCommand(BindableObject bindable);
+    static partial void OnIsVisibleChanged(BindableObject bindable, bool isVisible);
 
 
     public static ICommand GetClickCommand(BindableObject view)
@@ -160,6 +174,16 @@ public static partial class ContextMenu
     public static void SetShowMenuOnClick(BindableObject view, bool value)
     {
         view.SetValue(ShowMenuOnClickProperty, value);
+    }
+
+    public static bool GetIsVisible(BindableObject view)
+    {
+        return (bool)view.GetValue(IsVisibleProperty);
+    }
+
+    public static void SetIsVisible(BindableObject view, bool value)
+    {
+        view.SetValue(IsVisibleProperty, value);
     }
 
     public static void ExecuteClickCommand(BindableObject bindable, object defaultValue)

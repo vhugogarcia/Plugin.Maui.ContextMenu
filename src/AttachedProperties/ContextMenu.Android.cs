@@ -151,6 +151,10 @@ public static partial class ContextMenu
         }
     }
 
+    static partial void OnIsVisibleChanged(BindableObject bindable, bool isVisible)
+    {
+    }
+
     public static (int, int) AddRootMenuItem(MenuElement item, IMenu amenu, int rootGroupId, int rootId)
     {
         if (item is Action action)
@@ -338,11 +342,23 @@ public class MenuActionListener : Java.Lang.Object, IOnLongClickListener, IOnCli
 
     public void OnClick(AView v)
     {
+        if (!ContextMenu.GetIsVisible(_propertyOwner))
+        {
+            return;
+        }
         ShowMenu(v);
     }
 
     public bool OnLongClick(AView v)
     {
+        if (!ContextMenu.GetIsVisible(_propertyOwner))
+        {
+            v.Handler.RemoveCallbacks(_shrink);
+            v.Animate().Cancel();
+            v.ScaleX = 1f;
+            v.ScaleY = 1f;
+            return false;
+        }
         v.Animate().Cancel();
         v.ScaleX = 1f;
         v.ScaleY = 1f;
@@ -353,6 +369,10 @@ public class MenuActionListener : Java.Lang.Object, IOnLongClickListener, IOnCli
     public bool OnTouch(AView v, MotionEvent e)
     {
         if (!v.LongClickable)
+        {
+            return false;
+        }
+        if (!ContextMenu.GetIsVisible(_propertyOwner))
         {
             return false;
         }
