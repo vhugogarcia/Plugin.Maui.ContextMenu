@@ -56,6 +56,7 @@ public static partial class ContextMenu
     {
         if (bindable is CollectionView collectionView)
         {
+            collectionView.SetValue(ChildElementsProperty, new List<VisualElement>());
             collectionView.ChildAdded += ChildAddedToCollectionView;
             collectionView.ChildRemoved += ChildRemovedFromCollectionView;
             ForEachElement(collectionView, element => AttachMenuToView(element, collectionView));
@@ -95,9 +96,11 @@ public static partial class ContextMenu
     }
     public static void DetachMenuFromView(VisualElement visualElement)
     {
-        var aview = (AView)visualElement.Handler.PlatformView;
+        if (visualElement.Handler?.PlatformView is not AView aview)
+            return;
         aview.LongClickable = false;
         aview.SetOnLongClickListener(null);
+        aview.SetOnTouchListener(null);
     }
 
     public static void AttachClickToView(VisualElement visualElement, BindableObject propertySource)
@@ -108,7 +111,8 @@ public static partial class ContextMenu
     }
     public static void DetachClickFromView(VisualElement visualElement)
     {
-        var aview = (AView)visualElement.Handler.PlatformView;
+        if (visualElement.Handler?.PlatformView is not AView aview)
+            return;
         aview.Clickable = false;
         aview.SetOnClickListener(null);
     }

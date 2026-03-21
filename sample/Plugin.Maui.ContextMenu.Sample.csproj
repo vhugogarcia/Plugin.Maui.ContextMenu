@@ -62,6 +62,12 @@
 	  <MauiXaml Update="Pages\ShowMenuOnClick.xaml">
 	    <Generator>MSBuild:Compile</Generator>
 	  </MauiXaml>
+	  <MauiXaml Update="Pages\CrossPageLeakPage.xaml">
+	    <Generator>MSBuild:Compile</Generator>
+	  </MauiXaml>
+	  <MauiXaml Update="Pages\VisitorsPage.xaml">
+	    <Generator>MSBuild:Compile</Generator>
+	  </MauiXaml>
 	  <MauiXaml Update="Pages\Simple.xaml">
 	    <SubType></SubType>
 	  </MauiXaml>
