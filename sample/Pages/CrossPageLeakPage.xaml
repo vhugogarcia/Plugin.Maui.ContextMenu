@@ -1,14 +1,18 @@
-<?xml version="1.0" encoding="utf-8" ?>
-<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+<?xml version="1.0" encoding="utf-8"?>
+<ContentPage 
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
     xmlns:cm="clr-namespace:Plugin.Maui.ContextMenu;assembly=Plugin.Maui.ContextMenu"
     x:Class="Plugin.Maui.ContextMenu.Sample.Pages.CrossPageLeakPage"
     x:Name="this"
+    Shell.PresentationMode="ModalAnimated"
     Title="Dashboard (Page A)">
     <Grid RowDefinitions="Auto, *" RowSpacing="16" Padding="16">
         <VerticalStackLayout Spacing="8">
             <Label Text="This page has menu actions: 'Ver Invitados' and 'Remover'." />
-            <Label Text="Tap 'Go to Visitors' then come back. Long-press an item to verify the menu didn't change." FontAttributes="Italic" />
+            <Label
+                Text="Tap 'Go to Visitors' then come back. Long-press an item to verify the menu didn't change."
+                FontAttributes="Italic" />
             <Button Text="Go to Visitors (Page B)" Clicked="OnGoToVisitors" />
             <Label x:Name="StatusLabel" TextColor="Gray" />
         </VerticalStackLayout>
@@ -24,8 +28,10 @@
             </cm:ContextMenu.Menu>
             <CollectionView.ItemTemplate>
                 <DataTemplate>
-                    <Frame Margin="4" Padding="16" BackgroundColor="{Binding Color}" CornerRadius="8">
-                        <Label Text="{Binding Name}" FontSize="16" TextColor="White" FontAttributes="Bold" />
+                    <Frame Margin="4" Padding="16" BackgroundColor="{Binding Color}"
+                        CornerRadius="8">
+                        <Label Text="{Binding Name}" FontSize="16" TextColor="White"
+                            FontAttributes="Bold" />
                     </Frame>
                 </DataTemplate>
             </CollectionView.ItemTemplate>

@@ -4,6 +4,7 @@
     xmlns:cm="clr-namespace:Plugin.Maui.ContextMenu;assembly=Plugin.Maui.ContextMenu"
     x:Class="Plugin.Maui.ContextMenu.Sample.Pages.VisitorsPage"
     x:Name="this"
+    Shell.PresentationMode="ModalAnimated"
     Title="Visitors (Page B)">
     <Grid RowDefinitions="Auto, *" RowSpacing="16" Padding="16">
         <VerticalStackLayout Spacing="8">

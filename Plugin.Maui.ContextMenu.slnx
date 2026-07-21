@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="src/Plugin.Maui.ContextMenu.csproj" />
+  <Project Path="sample/Plugin.Maui.ContextMenu.Sample.csproj" />
+</Solution>
