@@ -6,7 +6,7 @@
              x:Class="Plugin.Maui.ContextMenu.Sample.MainPage"
              Title="Plugin.Maui.ContextMenu.Sample"
              x:Name="this">
-    <Grid ColumnDefinitions="*, *" RowDefinitions="Auto, Auto, Auto, Auto, Auto" RowSpacing="8" ColumnSpacing="8" Padding="32" BindingContext="{x:Reference this}">
+    <Grid ColumnDefinitions="*, *" RowDefinitions="Auto, Auto, Auto, Auto, Auto, Auto, Auto" RowSpacing="8" ColumnSpacing="8" Padding="32" BindingContext="{x:Reference this}">
         <Button Text="Simple" Command="{Binding GoToPageCommand}" CommandParameter="{x:Type pages:SimplePage}" />
         <Button Text="CollectionView" Command="{Binding GoToPageCommand}" CommandParameter="{x:Type pages:CollectionViewPage}" Grid.Column="1" />
         <Button Text="Groups" Command="{Binding GoToPageCommand}" CommandParameter="{x:Type pages:GroupsPage}" Grid.Row="1"/>
@@ -15,6 +15,11 @@
         <Button Text="ClickCommand" Command="{Binding GoToPageCommand}" CommandParameter="{x:Type pages:ClickCommandPage}" Grid.Row="2" Grid.Column="1" />
         <Button Text="ShowMenuOnClick" Command="{Binding GoToPageCommand}" CommandParameter="{x:Type pages:ShowMenuOnClick}" Grid.Row="3" />
         <Button Text="Cross-Page Leak" Command="{Binding GoToPageCommand}" CommandParameter="{x:Type pages:CrossPageLeakPage}" Grid.Row="3" Grid.Column="1" BackgroundColor="OrangeRed" TextColor="White" />
+        <!-- Repro scenarios: chat bubbles (bound IsVisible) + plain Border, modal and non-modal -->
+        <Button Text="Chat (push)" AutomationId="ChatPush" Command="{Binding OpenChatCommand}" CommandParameter="push" Grid.Row="4" />
+        <Button Text="Chat (modal)" AutomationId="ChatModal" Command="{Binding OpenChatCommand}" CommandParameter="modal" Grid.Row="4" Grid.Column="1" />
+        <Button Text="Chat (modal nav)" AutomationId="ChatModalNav" Command="{Binding OpenChatCommand}" CommandParameter="modalnav" Grid.Row="5" />
+        <Button Text="CV (modal)" AutomationId="CvModal" Command="{Binding OpenChatCommand}" CommandParameter="cvmodal" Grid.Row="5" Grid.Column="1" />
 
     </Grid>
 

@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:cm="clr-namespace:Plugin.Maui.ContextMenu;assembly=Plugin.Maui.ContextMenu"
+    xmlns:pages="clr-namespace:Plugin.Maui.ContextMenu.Sample.Pages"
+    x:Class="Plugin.Maui.ContextMenu.Sample.Pages.ChatPage"
+    x:DataType="pages:ChatPage"
+    x:Name="this"
+    Title="Chat">
+    <Grid RowDefinitions="Auto, Auto, Auto, *" RowSpacing="8" Padding="16">
+        <Grid ColumnDefinitions="*, Auto, Auto" ColumnSpacing="8">
+            <Label Text="{Binding Mode}" AutomationId="ModeLabel" FontAttributes="Bold" VerticalOptions="Center" />
+            <!-- Closes the page while a menu is open, to check the overlay is torn down with it -->
+            <Button Grid.Column="1" Text="Auto-close 3s" AutomationId="AutoCloseButton" Clicked="OnAutoCloseClicked" />
+            <Button Grid.Column="2" Text="Close" AutomationId="CloseButton" Clicked="OnCloseClicked" />
+        </Grid>
+
+        <!-- Every menu action writes here so we can see it ran and got the right item -->
+        <Label Grid.Row="1" Text="{Binding Status}" AutomationId="StatusLabel" TextColor="DarkGreen" />
+
+        <!-- Plain view (not inside a CollectionView) with a menu -->
+        <Border Grid.Row="2" AutomationId="PlainBorder" Padding="16" BackgroundColor="Orange" StrokeThickness="0">
+            <Border.StrokeShape>
+                <RoundRectangle CornerRadius="12" />
+            </Border.StrokeShape>
+            <cm:ContextMenu.Menu>
+                <DataTemplate>
+                    <cm:Menu>
+                        <cm:Action Title="Copiar" Command="{Binding CopyPlainCommand, Source={x:Reference this}}" />
+                    </cm:Menu>
+                </DataTemplate>
+            </cm:ContextMenu.Menu>
+            <Label Text="Plain Border (long-press me)" TextColor="Black" />
+        </Border>
+
+        <CollectionView Grid.Row="3" ItemsSource="{Binding Messages}" SelectionMode="None">
+            <CollectionView.ItemTemplate>
+                <DataTemplate x:DataType="pages:ChatMessage">
+                    <Grid Padding="0,4">
+                        <!-- User bubble -->
+                        <Border IsVisible="{Binding IsUser}" HorizontalOptions="End" MaximumWidthRequest="280"
+                            Padding="12" BackgroundColor="SteelBlue" StrokeThickness="0">
+                            <Border.StrokeShape>
+                                <RoundRectangle CornerRadius="12" />
+                            </Border.StrokeShape>
+                            <cm:ContextMenu.Menu>
+                                <DataTemplate>
+                                    <cm:Menu>
+                                        <cm:Action Title="Copiar"
+                                            Command="{Binding CopyCommand, Source={x:Reference this}, x:DataType=pages:ChatPage}"
+                                            CommandParameter="{Binding .}" />
+                                    </cm:Menu>
+                                </DataTemplate>
+                            </cm:ContextMenu.Menu>
+                            <Label Text="{Binding Text}" TextColor="White" />
+                        </Border>
+                        <!-- Bot bubble -->
+                        <Border IsVisible="{Binding IsBot}" HorizontalOptions="Start" MaximumWidthRequest="280"
+                            Padding="12" BackgroundColor="LightGray" StrokeThickness="0">
+                            <Border.StrokeShape>
+                                <RoundRectangle CornerRadius="12" />
+                            </Border.StrokeShape>
+                            <cm:ContextMenu.Menu>
+                                <DataTemplate>
+                                    <cm:Menu>
+                                        <cm:Action Title="Copiar"
+                                            Command="{Binding CopyCommand, Source={x:Reference this}, x:DataType=pages:ChatPage}"
+                                            CommandParameter="{Binding .}" />
+                                    </cm:Menu>
+                                </DataTemplate>
+                            </cm:ContextMenu.Menu>
+                            <Label Text="{Binding Text}" TextColor="Black" />
+                        </Border>
+                    </Grid>
+                </DataTemplate>
+            </CollectionView.ItemTemplate>
+        </CollectionView>
+    </Grid>
+</ContentPage>

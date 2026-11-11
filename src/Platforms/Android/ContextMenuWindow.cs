@@ -130,6 +130,68 @@ internal class ContextMenuSnapshotPreview : ContextMenuPreview
     }
 }
 
+/// <summary>
+/// Root of the overlay window. Routes the Back gesture/key to <see cref="BackPressed"/> so that
+/// Back dismisses the menu instead of reaching the page underneath.
+/// </summary>
+internal class ContextMenuDecorView : FrameLayout
+{
+    BackCallback _backCallback;
+
+    public event EventHandler BackPressed;
+
+    public ContextMenuDecorView(Context context) : base(context)
+    {
+        // Needed so the overlay window takes key focus and receives KEYCODE_BACK.
+        Focusable = true;
+        FocusableInTouchMode = true;
+    }
+
+    protected override void OnAttachedToWindow()
+    {
+        base.OnAttachedToWindow();
+        RequestFocus();
+        // Android 13+: with predictive back (on by default for apps targeting API 36), the system
+        // no longer sends KEYCODE_BACK; it invokes the callbacks of the focused window instead.
+        if (OperatingSystem.IsAndroidVersionAtLeast(33) && FindOnBackInvokedDispatcher() is { } dispatcher)
+        {
+            _backCallback = new BackCallback(() => BackPressed?.Invoke(this, EventArgs.Empty));
+            dispatcher.RegisterOnBackInvokedCallback(Android.Window.IOnBackInvokedDispatcher.PriorityOverlay, _backCallback);
+        }
+    }
+
+    protected override void OnDetachedFromWindow()
+    {
+        if (OperatingSystem.IsAndroidVersionAtLeast(33) && _backCallback is not null)
+        {
+            FindOnBackInvokedDispatcher()?.UnregisterOnBackInvokedCallback(_backCallback);
+            _backCallback = null;
+        }
+        base.OnDetachedFromWindow();
+    }
+
+    public override bool DispatchKeyEvent(KeyEvent e)
+    {
+        // Legacy back dispatch (predictive back disabled, or older behavior).
+        if (e?.KeyCode == Keycode.Back)
+        {
+            if (e.Action == KeyEventActions.Up && !e.IsCanceled)
+            {
+                BackPressed?.Invoke(this, EventArgs.Empty);
+            }
+            return true;
+        }
+        return base.DispatchKeyEvent(e);
+    }
+
+    sealed class BackCallback : Java.Lang.Object, Android.Window.IOnBackInvokedCallback
+    {
+        readonly System.Action _action;
+        public BackCallback(System.Action action) => _action = action;
+        public void OnBackInvoked() => _action();
+    }
+}
+
 internal class ContextMenuWindow
 {
     public const int DismissAnimationDuration = 120;
@@ -137,15 +199,24 @@ internal class ContextMenuWindow
     public const int ContextMenuSpacing = 16;
     public const int ContextMenuEdgeSpacing = 16;
 
+    // Extra time after the dismiss animation before the fallback forces the teardown.
+    const int DismissFallbackSlack = 250;
+
     Context _context;
     IWindowManager _windowManager;
-    FrameLayout _decorView;
+    ContextMenuDecorView _decorView;
     AView _parent;
     AView _content;
     ContextMenuBackgroundView _backgroundView;
     ContextMenuPopup _menu;
     private int _offsetX;
     private int _offsetY;
+
+    bool _dismissing;
+    bool _finished;
+    bool _parentHidden;
+    ViewStates _parentOriginalVisibility = ViewStates.Visible;
+    readonly Handler _handler = new Handler(Looper.MainLooper!);
 
     public ContextMenuWindow(Context context, AView parent, Preview? p)
     {
@@ -191,36 +262,108 @@ internal class ContextMenuWindow
         };
         return backgroundView;
     }
-    FrameLayout CreateDecorView(AView background, AView content)
+    ContextMenuDecorView CreateDecorView(AView background, AView content)
     {
-        var decorView = new FrameLayout(_context);
+        var decorView = new ContextMenuDecorView(_context);
         decorView.AddView(background, new FrameLayout.LayoutParams(FrameLayout.LayoutParams.MatchParent, FrameLayout.LayoutParams.MatchParent));
         decorView.AddView(content, new FrameLayout.LayoutParams(FrameLayout.LayoutParams.WrapContent, FrameLayout.LayoutParams.WrapContent));
+        decorView.BackPressed += (s, e) => Dismiss();
         return decorView;
     }
 
+    /// <summary>
+    /// Animated dismiss. Safe to call more than once (the popup's DismissEvent calls back into it).
+    /// The parent view is always restored by <see cref="Finish"/>, which does not depend on the
+    /// animation completing: it also runs from a timeout fallback and when the parent leaves the window.
+    /// </summary>
     void Dismiss()
     {
+        if (_dismissing || _finished)
+        {
+            return;
+        }
+        _dismissing = true;
+
+        _menu?.Dismiss();
+
+        if (_decorView?.IsAttachedToWindow != true || !_parent.IsAttachedToWindow)
+        {
+            Finish();
+            return;
+        }
+
         var pos = new int[2];
         _parent.GetLocationInWindow(pos);
-        _menu?.Dismiss();
         _content.Animate()
             .ScaleX(1)
             .ScaleY(1)
             .Y(pos[1])
             .SetDuration(DismissAnimationDuration)
-            .WithEndAction(() =>
-            {
-                _parent.Visibility = ViewStates.Visible;
-                if (_decorView.Parent != null)
-                {
-                    _windowManager.RemoveView(_decorView);
-                }
-            })
+            .WithEndAction(Finish)
             .Start();
 
         AnimateBackgroundOut();
 
+        // The end action is skipped when the animation is cancelled or the view is detached.
+        _handler.PostDelayed(Finish, DismissAnimationDuration + DismissFallbackSlack);
+    }
+
+    /// <summary>Tears everything down immediately and restores the parent view. Idempotent.</summary>
+    void Finish()
+    {
+        if (_finished)
+        {
+            return;
+        }
+        _finished = true;
+        _dismissing = true;
+
+        _handler.RemoveCallbacksAndMessages(null);
+        _parent.ViewDetachedFromWindow -= OnParentDetached;
+
+        RestoreParent();
+
+        try
+        {
+            _menu?.Dismiss();
+        }
+        catch (Java.Lang.Exception)
+        {
+            // The popup's window may already be gone (e.g. its host window was removed).
+        }
+
+        if (_decorView?.Parent != null)
+        {
+            _content.Animate().Cancel();
+            _backgroundView?.Animate().Cancel();
+            try
+            {
+                _windowManager.RemoveViewImmediate(_decorView);
+            }
+            catch (Java.Lang.Exception)
+            {
+                // Window was already removed together with its parent window.
+            }
+        }
+    }
+
+    void RestoreParent()
+    {
+        _parent.ScaleX = 1f;
+        _parent.ScaleY = 1f;
+        // Only undo our own change: if something else (e.g. a bound IsVisible) changed the
+        // visibility while the menu was open, that value wins.
+        if (_parentHidden && _parent.Visibility == ViewStates.Invisible)
+        {
+            _parent.Visibility = _parentOriginalVisibility;
+        }
+        _parentHidden = false;
+    }
+
+    void OnParentDetached(object sender, AView.ViewDetachedFromWindowEventArgs e)
+    {
+        // The page (or modal dialog) hosting the view went away while the menu was open.
+        Finish();
     }
 
     public static Bitmap GetViewSnapshot(AView v)
@@ -235,15 +378,29 @@ internal class ContextMenuWindow
     {
         _offsetX = offsetX;
         _offsetY = offsetY;
-        var token = _parent.RootView.WindowToken;
+
+        // Attach the overlay to the window that hosts the view. Modal pages live in their own
+        // dialog window; using the activity's window would put the overlay *under* the modal.
+        var token = _parent.WindowToken;
+        if (token == null)
+        {
+            return;
+        }
+
         _backgroundView = CreateBackgroundView();
         _decorView = CreateDecorView(_backgroundView, _content);
 
-        _windowManager.AddView(_decorView, new WindowManagerLayoutParams(
+        var layoutParams = new WindowManagerLayoutParams(
             WindowManagerLayoutParams.MatchParent, WindowManagerLayoutParams.MatchParent,
             WindowManagerTypes.ApplicationPanel,
             WindowManagerFlags.LayoutNoLimits,
-            Format.Translucent));
+            Format.Translucent)
+        {
+            Token = token,
+        };
+        _windowManager.AddView(_decorView, layoutParams);
+
+        _parent.ViewDetachedFromWindow += OnParentDetached;
 
         _parent.ScaleX = ContextMenu.LongPressScaleFactor;
         _parent.ScaleY = ContextMenu.LongPressScaleFactor;
@@ -258,6 +415,11 @@ internal class ContextMenuWindow
 
     void ShowAfterLayout()
     {
+        if (_dismissing || _finished)
+        {
+            return;
+        }
+
         _parent.ScaleX = 1f;
         _parent.ScaleY = 1f;
         Update();
@@ -287,6 +449,8 @@ internal class ContextMenuWindow
                 - previewHeight;
         }
 
+        _parentOriginalVisibility = _parent.Visibility;
+        _parentHidden = true;
         _parent.Visibility = ViewStates.Invisible;
 
         _content.Animate()
@@ -296,6 +460,10 @@ internal class ContextMenuWindow
             .SetDuration(ShowAnimationDuration)
             .WithEndAction(() =>
             {
+                if (_dismissing || _finished || _decorView?.IsAttachedToWindow != true)
+                {
+                    return;
+                }
                 _menu.Show(_offsetX, _offsetY + ViewUtils.DpToPx(ContextMenuWindow.ContextMenuSpacing));
             })
             .Start();

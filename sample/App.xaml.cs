@@ -8,4 +8,15 @@ public partial class App : Application
 
 		MainPage = new NavigationPage(new MainPage());
 	}
+
+#if IOS
+	protected override void OnStart()
+	{
+		base.OnStart();
+		if (SelfTest.Enabled)
+		{
+			_ = SelfTest.RunAsync(((NavigationPage)MainPage).CurrentPage);
+		}
+	}
+#endif
 }
